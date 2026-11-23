@@ -53,6 +53,26 @@ export function invoiceMessage(invoice) {
   return lines.join('\n');
 }
 
+export const DEFAULT_THANK_YOU =
+  'Namaste {customer} ji,\n\nThank you for shopping with *{shop}*! 🙏\nPlease find attached your bill (Invoice No. {invoiceNo}, dated {date}).\n\nWe look forward to serving you again.\n\n{shop}\nContact: {contacts}';
+
+/**
+ * Thank-you message sent together with the bill PDF.
+ * Placeholders: {customer} {invoiceNo} {date} {amount} {shop} {contacts}
+ */
+export function thankYouMessage(invoice, template = DEFAULT_THANK_YOU) {
+  const b = invoice.shop.business;
+  const values = {
+    customer: invoice.customer.name,
+    invoiceNo: invoice.invoiceNo,
+    date: formatDate(invoice.date, invoice.shop.dateFormat || 'dd-MM-yyyy'),
+    amount: `₹${formatINR(invoice.totals.grossPaise)}`,
+    shop: b.name,
+    contacts: b.contacts,
+  };
+  return String(template || DEFAULT_THANK_YOU).replace(/\{(\w+)\}/g, (m, k) => (k in values ? values[k] : m));
+}
+
 /** Polite reminder for an outstanding balance. */
 export function reminderMessage(invoice) {
   const b = invoice.shop.business;

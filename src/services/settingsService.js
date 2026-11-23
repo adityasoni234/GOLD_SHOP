@@ -1,6 +1,7 @@
 import { getOne, saveOne, COLLECTIONS } from './db.js';
 import { deepMerge } from '../utils/misc.js';
 import { DEFAULT_PURITIES } from '../constants/index.js';
+import { DEFAULT_THANK_YOU } from '../utils/whatsapp.js';
 
 const SETTINGS_ID = 'app';
 
@@ -37,6 +38,8 @@ export const DEFAULT_SETTINGS = {
     printOffsetTopMm: 0,
     printOffsetLeftMm: 0,
     footerText: 'This is a Computer Generated Invoice',
+    // Sent with the bill PDF on WhatsApp. Placeholders: {customer} {invoiceNo} {date} {amount} {shop} {contacts}
+    whatsappMessage: DEFAULT_THANK_YOU,
     terms: [
       'The Jurisdiction Of All Disputes Will Be Udaipur.',
       'Shop Opening Time Is 10:30 AM.',

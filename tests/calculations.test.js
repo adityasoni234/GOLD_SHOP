@@ -230,3 +230,16 @@ test('WhatsApp phone normalisation', async () => {
   assert.equal(waPhone('09876543210'), '919876543210');
   assert.equal(waPhone('12345'), '');
 });
+
+test('WhatsApp thank-you message fills placeholders', async () => {
+  const { thankYouMessage } = await import('../src/utils/whatsapp.js');
+  const inv = {
+    invoiceNo: '158', date: '2026-11-18', customer: { name: 'MANJU LODHA' }, totals: { grossPaise: 16978000 },
+    shop: { dateFormat: 'dd-MM-yyyy', business: { name: 'AMBALAL BHANWARLAL SARUPARIA', contacts: '9414166467, 8107727819' } },
+  };
+  const msg = thankYouMessage(inv);
+  assert.ok(msg.startsWith('Namaste MANJU LODHA ji,'));
+  assert.ok(msg.includes('Thank you for shopping with *AMBALAL BHANWARLAL SARUPARIA*'));
+  assert.ok(msg.includes('Invoice No. 158, dated 18-11-2026'));
+  assert.equal(thankYouMessage(inv, 'Hi {customer}, {amount} {unknown}'), 'Hi MANJU LODHA, ₹1,69,780.00 {unknown}');
+});

@@ -4,7 +4,7 @@ import Modal from '../common/Modal.jsx';
 import Field from '../common/Field.jsx';
 import { useToast } from '../common/Toast.jsx';
 import { createInvoicePdf, downloadFile } from '../../invoice/invoicePdf.js';
-import { invoiceMessage, reminderMessage, openWhatsApp, waPhone } from '../../utils/whatsapp.js';
+import { invoiceMessage, reminderMessage, thankYouMessage, openWhatsApp, waPhone } from '../../utils/whatsapp.js';
 import { logAudit } from '../../services/auditService.js';
 
 /**
@@ -19,7 +19,9 @@ export default function WhatsAppSendDialog({ invoice, settings, mode = 'bill', a
   const toast = useToast();
   const isBill = mode === 'bill';
   const [phone, setPhone] = useState(invoice.customer.phone || '');
-  const [message, setMessage] = useState(() => (isBill ? invoiceMessage(invoice) : reminderMessage(invoice)));
+  const [message, setMessage] = useState(() =>
+    isBill ? thankYouMessage(invoice, settings.invoice.whatsappMessage) : reminderMessage(invoice),
+  );
   const [file, setFile] = useState(null);
   const [status, setStatus] = useState(isBill ? 'preparing' : 'ready');
   const [error, setError] = useState('');
@@ -78,7 +80,7 @@ export default function WhatsAppSendDialog({ invoice, settings, mode = 'bill', a
     }
     // 2) Fallback: download the PDF and open the customer's WhatsApp chat.
     if (isBill && file) downloadFile(file);
-    openWhatsApp(phone, isBill && file ? `${message}\n\n(Bill PDF attached)` : message);
+    openWhatsApp(phone, message);
     audit(isBill && file ? 'chat opened, PDF downloaded' : 'text message');
     toast(
       isBill && file ? 'PDF downloaded. In WhatsApp, tap 📎 → Document and attach it.' : 'WhatsApp opened with the message.',
@@ -87,9 +89,10 @@ export default function WhatsAppSendDialog({ invoice, settings, mode = 'bill', a
     onClose();
   };
 
+  /** Backup when the PDF can't be sent: bill details written out as text. */
   const sendTextOnly = () => {
-    openWhatsApp(phone, message);
-    audit('text message');
+    openWhatsApp(phone, `${message}\n\n${invoiceMessage(invoice)}`);
+    audit('bill details as text');
     onClose();
   };
 
@@ -103,7 +106,7 @@ export default function WhatsAppSendDialog({ invoice, settings, mode = 'bill', a
           <button className="btn" onClick={onClose}>{afterPrint ? 'Not now' : 'Cancel'}</button>
           {isBill && (
             <>
-              <button className="btn" onClick={sendTextOnly}>Text only</button>
+              <button className="btn" onClick={sendTextOnly} title="Send the bill details written out as text, without the PDF">Bill as text</button>
               <button className="btn" disabled={!file} onClick={() => downloadFile(file)}><FileDown size={15} /> Download PDF</button>
             </>
           )}
@@ -135,8 +138,8 @@ export default function WhatsAppSendDialog({ invoice, settings, mode = 'bill', a
             </Field>
           )}
         </div>
-        <Field label="Message">
-          <textarea className="textarea" rows={10} value={message} onChange={(e) => setMessage(e.target.value)} style={{ fontFamily: 'var(--font-ui)', fontSize: 13 }} />
+        <Field label={isBill ? 'Thank-you message (sent with the PDF)' : 'Message'} hint={isBill ? 'Default text can be changed in Settings → Invoice & print.' : undefined}>
+          <textarea className="textarea" rows={isBill ? 8 : 10} value={message} onChange={(e) => setMessage(e.target.value)} style={{ fontFamily: 'var(--font-ui)', fontSize: 13 }} />
         </Field>
         {isBill && status === 'ready' && (
           <div className="small muted">

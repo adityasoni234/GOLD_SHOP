@@ -41,7 +41,7 @@ One invoice holds up to **14 items** so it always fits on one page.
 
 ## WhatsApp
 
-- **Send bill on WhatsApp** (invoice page, All Invoices rows, after saving, and offered automatically after printing) creates the A4 bill as a PDF.
+- **Send bill on WhatsApp** (invoice page, All Invoices rows, after saving, and offered automatically after printing) creates the A4 bill as a PDF and sends it with a thank-you message (editable in *Settings → Invoice & print*).
   - Phones, Safari and other browsers that can share files: the share menu opens with the PDF attached. Choose WhatsApp, then the customer.
   - Other browsers: the PDF downloads and the customer's WhatsApp chat opens with the bill summary. Attach the PDF with 📎 → Document.
 - **Reminder** (invoice page and Payments → Outstanding) sends a balance-due message.

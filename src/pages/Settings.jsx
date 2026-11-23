@@ -231,6 +231,13 @@ export default function Settings() {
                 <Field label="Footer text" className="span-2">
                   <input className="input" value={inv.footerText} onChange={(e) => set('invoice', { footerText: e.target.value })} />
                 </Field>
+                <Field
+                  label="WhatsApp thank-you message (sent with the bill PDF)"
+                  className="span-all"
+                  hint="You can use {customer} {invoiceNo} {date} {amount} {shop} {contacts} — they are filled in automatically. *text* shows bold in WhatsApp."
+                >
+                  <textarea className="textarea" rows={7} value={inv.whatsappMessage} onChange={(e) => set('invoice', { whatsappMessage: e.target.value })} />
+                </Field>
                 <Field label="Terms & conditions (one per line, max 10)" className="span-all">
                   <textarea
                     className="textarea"
