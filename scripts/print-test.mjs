@@ -112,6 +112,33 @@ async function main() {
       if (!ok) failures += 1;
       console.log(`${ok ? 'PASS' : 'FAIL'}  ${inv.id.padEnd(13)} items=${String(inv.items.length).padStart(2)}  pages=${pages}  size=${box.slice(2).map((n) => n.toFixed(1)).join('x')}pt  ${file}`);
     }
+    // WhatsApp / Download PDF export (generated in the browser by src/invoice/invoicePdf.js)
+    for (const inv of cases.filter((x) => ['inv_oldmetal', 'inv_max'].includes(x.id))) {
+      await go(`${APP}/invoices/${inv.id}`);
+      const { result } = await c.send('Runtime.evaluate', {
+        awaitPromise: true,
+        returnByValue: true,
+        expression: `(async () => {
+          const { createInvoicePdf } = await import('/src/invoice/invoicePdf.js');
+          const inv = JSON.parse(localStorage.getItem('abs-billing:v1:invoices'))['${inv.id}'];
+          const file = await createInvoicePdf({ invoice: inv });
+          const buf = new Uint8Array(await file.arrayBuffer());
+          let bin = ''; for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+          return { name: file.name, type: file.type, b64: btoa(bin) };
+        })()`,
+      });
+      const v = result.value;
+      const pdf = Buffer.from(v.b64, 'base64');
+      const file = join(OUT, `export-${v.name}`);
+      writeFileSync(file, pdf);
+      const text = pdf.toString('latin1');
+      const pages = (text.match(/\/Type\s*\/Page[^s]/g) || []).length;
+      const box = (text.match(/\/MediaBox\s*\[([^\]]*)\]/) || [])[1]?.trim().split(/\s+/).map(Number) || [];
+      const ok = pages === 1 && v.type === 'application/pdf' && Math.abs(box[2] - 595.28) < 1.5 && Math.abs(box[3] - 841.89) < 1.5;
+      if (!ok) failures += 1;
+      console.log(`${ok ? 'PASS' : 'FAIL'}  PDF export ${inv.id.padEnd(13)} pages=${pages}  ${Math.round(pdf.length / 1024)} KB  ${file}`);
+    }
+
     c.close();
     if (failures) process.exitCode = 1;
   } finally {

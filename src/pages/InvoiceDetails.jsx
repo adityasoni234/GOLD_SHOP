@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
 import { Printer, FileDown, Pencil, Copy, Ban, Wallet, Trash2, History, ArrowLeft, Calculator, CheckCircle2, MessageCircle } from 'lucide-react';
-import { openWhatsApp, invoiceMessage, reminderMessage, waPhone } from '../utils/whatsapp.js';
+import WhatsAppSendDialog from '../components/invoice/WhatsAppSendDialog.jsx';
+import { createInvoicePdf, downloadFile } from '../invoice/invoicePdf.js';
 import { useApp } from '../context/AppContext.jsx';
 import { useToast } from '../components/common/Toast.jsx';
 import PageHeader from '../components/common/PageHeader.jsx';
@@ -22,21 +23,57 @@ export default function InvoiceDetails() {
   const location = useLocation();
   const navigate = useNavigate();
   const toast = useToast();
-  const { invoices, payments, settings, recordPayment, deletePayment, cancelInvoice, deleteDraft } = useApp();
+  const { invoices, payments, settings, user, recordPayment, deletePayment, cancelInvoice, deleteDraft } = useApp();
   const invoice = invoices.find((i) => i.id === id);
   const invPayments = useMemo(() => payments.filter((p) => p.invoiceId === id), [payments, id]);
   const [logs, setLogs] = useState([]);
   const [dialog, setDialog] = useState(null);
   const [showCalc, setShowCalc] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const printedRef = useRef(false);
+
+  /** Print, then offer to send the same bill on WhatsApp once the print dialog closes. */
+  const print = () => {
+    printedRef.current = true;
+    printInvoice(invoice);
+  };
+
+  useEffect(() => {
+    const onAfterPrint = () => {
+      if (!printedRef.current) return;
+      printedRef.current = false;
+      if (invoice?.status === INVOICE_STATUS.FINAL) setDialog('wa-after-print');
+    };
+    window.addEventListener('afterprint', onAfterPrint);
+    return () => window.removeEventListener('afterprint', onAfterPrint);
+  }, [invoice?.status]);
+
+  const downloadPdf = async () => {
+    setPdfBusy(true);
+    try {
+      downloadFile(await createInvoicePdf({ invoice, logoDataUrl: settings.business.logoDataUrl }));
+    } catch (err) {
+      console.error(err);
+      toast('Could not create the PDF file — opening the print dialog instead (choose “Save as PDF”).', 'error');
+      printInvoice(invoice, { asPdf: true });
+    } finally {
+      setPdfBusy(false);
+    }
+  };
 
   useEffect(() => {
     listAuditLogs(id).then(setLogs).catch(() => setLogs([]));
-  }, [id, invoice?.updatedAt]);
+  }, [id, invoice?.updatedAt, dialog]);
 
   useEffect(() => {
-    if (invoice && params.get('print') === '1' && invoice.status !== INVOICE_STATUS.DRAFT) {
+    if (!invoice || invoice.status === INVOICE_STATUS.DRAFT) return;
+    if (params.get('print') === '1') {
       setParams({}, { replace: true });
+      printedRef.current = true;
       printInvoice(invoice);
+    } else if (params.get('send') === 'whatsapp' && invoice.status === INVOICE_STATUS.FINAL) {
+      setParams({}, { replace: true });
+      setDialog('wa');
     }
   }, [invoice, params, setParams]);
 
@@ -73,19 +110,15 @@ export default function InvoiceDetails() {
               </>
             ) : (
               <>
-                <button className="btn btn-primary" onClick={() => printInvoice(invoice)}><Printer size={15} /> Print invoice</button>
-                <button className="btn" onClick={() => printInvoice(invoice, { asPdf: true })} title='In the print dialog choose "Save as PDF"'>
-                  <FileDown size={15} /> Download PDF
-                </button>
+                <button className="btn btn-primary" onClick={print}><Printer size={15} /> Print invoice</button>
                 {isFinal && (
-                  <button
-                    className="btn btn-whatsapp"
-                    onClick={() => openWhatsApp(invoice.customer.phone, invoiceMessage(invoice))}
-                    title={waPhone(invoice.customer.phone) ? `Send bill summary to ${invoice.customer.phone}` : 'No valid mobile on this invoice – WhatsApp will ask you to pick a contact'}
-                  >
-                    <MessageCircle size={15} /> Send on WhatsApp
+                  <button className="btn btn-whatsapp-solid" onClick={() => setDialog('wa')} title="Send the bill PDF to the customer on WhatsApp">
+                    <MessageCircle size={15} /> Send bill on WhatsApp
                   </button>
                 )}
+                <button className="btn" onClick={downloadPdf} disabled={pdfBusy}>
+                  <FileDown size={15} /> {pdfBusy ? 'Creating PDF…' : 'Download PDF'}
+                </button>
                 {isFinal && <button className="btn" onClick={() => setDialog('pay')}><Wallet size={15} /> Record payment</button>}
                 {isFinal && <Link className="btn" to={`/invoices/${invoice.id}/edit`}><Pencil size={15} /> Edit</Link>}
               </>
@@ -99,9 +132,9 @@ export default function InvoiceDetails() {
       {location.state?.justCreated && (
         <div className="alert success" style={{ marginBottom: 16 }}>
           <CheckCircle2 size={16} />
-          <div className="grow">Invoice {invoice.invoiceNo} saved. Print it on A4 paper with “Background graphics” on and margins set to “None”.</div>
-          <button className="btn btn-sm btn-primary" onClick={() => printInvoice(invoice)}><Printer size={13} /> Print now</button>
-          <button className="btn btn-sm btn-whatsapp" onClick={() => openWhatsApp(invoice.customer.phone, invoiceMessage(invoice))}><MessageCircle size={13} /> WhatsApp</button>
+          <div className="grow">Invoice {invoice.invoiceNo} saved. Print it (A4, margins “None”, background graphics on) and/or send it to the customer on WhatsApp.</div>
+          <button className="btn btn-sm btn-primary" onClick={print}><Printer size={13} /> Print now</button>
+          <button className="btn btn-sm btn-whatsapp-solid" onClick={() => setDialog('wa')}><MessageCircle size={13} /> Send on WhatsApp</button>
         </div>
       )}
       {invoice.status === INVOICE_STATUS.CANCELLED && (
@@ -123,7 +156,7 @@ export default function InvoiceDetails() {
                 <h3><Wallet size={16} /> Payments</h3>
                 <div className="row">
                   {isFinal && invoice.balancePaise > 0 && (
-                    <button className="btn btn-sm btn-whatsapp" title="Send balance reminder on WhatsApp" onClick={() => openWhatsApp(invoice.customer.phone, reminderMessage(invoice))}>
+                    <button className="btn btn-sm btn-whatsapp" title="Send balance reminder on WhatsApp" onClick={() => setDialog('wa-reminder')}>
                       <MessageCircle size={13} /> Reminder
                     </button>
                   )}
@@ -197,6 +230,17 @@ export default function InvoiceDetails() {
       </div>
 
       <PrintPortal {...printProps} />
+
+      {(dialog === 'wa' || dialog === 'wa-after-print' || dialog === 'wa-reminder') && (
+        <WhatsAppSendDialog
+          invoice={invoice}
+          settings={settings}
+          user={user}
+          mode={dialog === 'wa-reminder' ? 'reminder' : 'bill'}
+          afterPrint={dialog === 'wa-after-print'}
+          onClose={() => setDialog(null)}
+        />
+      )}
 
       {dialog === 'pay' && <PaymentForm invoice={invoice} onSave={async (p) => { await recordPayment(p); toast('Payment recorded.', 'success'); }} onClose={() => setDialog(null)} />}
       {dialog === 'cancel' && (

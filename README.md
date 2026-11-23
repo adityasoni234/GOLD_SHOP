@@ -35,9 +35,17 @@ The printed invoice is a fixed 210 × 297 mm canvas built to match the reference
 - **Background graphics: on** (needed for the watermark)
 - **Headers and footers: off**
 
-*Download PDF* opens the same dialog. Choose **Save as PDF** as the destination; the file name is filled in for you.
+*Download PDF* saves a real A4 PDF file of the bill (`Invoice-<no>-<customer>.pdf`).
 If your printer shifts the page, open *Settings → Invoice & print → Print alignment test* and adjust the top/left offsets.
 One invoice holds up to **14 items** so it always fits on one page.
+
+## WhatsApp
+
+- **Send bill on WhatsApp** (invoice page, All Invoices rows, after saving, and offered automatically after printing) creates the A4 bill as a PDF.
+  - Phones, Safari and other browsers that can share files: the share menu opens with the PDF attached. Choose WhatsApp, then the customer.
+  - Other browsers: the PDF downloads and the customer's WhatsApp chat opens with the bill summary. Attach the PDF with 📎 → Document.
+- **Reminder** (invoice page and Payments → Outstanding) sends a balance-due message.
+- Every send is recorded in the invoice's audit trail.
 
 ## Connecting Firebase
 
@@ -83,5 +91,5 @@ scripts/        print-test.mjs (headless Chrome → PDF, checks one A4 page)
 
 - Demo mode keeps data in one browser profile only. Use Firebase for real multi-device use.
 - With Firebase, all collections are loaded when the app starts. This suits a single shop; very large histories will want paging.
-- PDF export goes through the browser print dialog. No PDF library is bundled.
+- WhatsApp click-to-chat links cannot attach files, so on browsers without file sharing you attach the downloaded PDF yourself.
 - Reports show **revenue**, not profit. Purchase cost and inventory are not tracked.

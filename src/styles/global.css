@@ -51,6 +51,10 @@ a:hover { text-decoration: underline; }
 .btn-danger-solid:hover:not(:disabled) { background: #8d2f26; }
 .btn-whatsapp { color: #1a7f4b; border-color: #b7dfc8; }
 .btn-whatsapp:hover:not(:disabled) { background: #e8f6ee; border-color: #25a35a; }
+.btn-whatsapp-solid { background: #1f9d55; border-color: #1f9d55; color: #fff; }
+.btn-whatsapp-solid:hover:not(:disabled) { background: #188247; border-color: #188247; }
+.spin { animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 .btn-ghost { border-color: transparent; background: transparent; }
 .btn-sm { height: 28px; padding: 0 10px; font-size: 12px; }
 .btn-icon { width: 30px; height: 30px; padding: 0; }
