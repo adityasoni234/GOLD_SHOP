@@ -1,0 +1,34 @@
+:root {
+  --gold: #b08d57;
+  --gold-dark: #8c6c3c;
+  --gold-soft: #efe4cf;
+  --gold-faint: #f7f1e5;
+  --brown: #4a3526;
+  --brown-dark: #3a291d;
+  --ivory: #faf8f2;
+  --white: #ffffff;
+  --text: #292929;
+  --text-muted: #6f675d;
+  --border: #d8d0c2;
+  --border-soft: #e9e3d8;
+
+  --success: #2f7a4b;
+  --success-bg: #e6f3ea;
+  --warning: #9a6a12;
+  --warning-bg: #fbf1dc;
+  --danger: #a93a2f;
+  --danger-bg: #f9e6e3;
+  --info: #2e5a87;
+  --info-bg: #e6eef7;
+
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-lg: 10px;
+  --shadow: 0 1px 2px rgba(74, 53, 38, 0.06), 0 1px 6px rgba(74, 53, 38, 0.05);
+
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  --font-serif: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, 'Times New Roman', serif;
+
+  --sidebar-w: 232px;
+  --header-h: 58px;
+}

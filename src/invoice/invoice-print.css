@@ -1,0 +1,285 @@
+/* =====================================================================
+   A4 TAX INVOICE — physical print layout
+   Everything is sized in millimetres / points so the printed page is the
+   same on every screen. Layout proportions follow the shop's reference
+   invoice: header, party block, item table with central watermark,
+   three-column summary, terms + signature.
+   ===================================================================== */
+
+.inv-page {
+  --inv-ink: #161616;
+  --inv-blue: #1f3263;
+  --inv-line: #3d3d3d;
+  --inv-line-soft: #8a8a8a;
+  --inv-wm-mark: #ebe0ca;
+  --inv-wm-text: #c9ccd3;
+
+  position: relative;
+  width: 210mm;
+  height: 297mm;
+  overflow: hidden;
+  background: #fff;
+  color: var(--inv-ink);
+  font-family: Arial, Helvetica, 'Liberation Sans', sans-serif;
+  font-size: 8pt;
+  line-height: 1.25;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  box-sizing: border-box;
+}
+.inv-page *, .inv-page *::before, .inv-page *::after { box-sizing: border-box; }
+
+/* Outer frame: 8 mm side margins, 9 mm top/bottom (as on the reference) */
+.inv-frame {
+  position: absolute;
+  top: calc(9mm + var(--inv-offset-y, 0mm));
+  left: calc(8mm + var(--inv-offset-x, 0mm));
+  width: 194mm;
+  height: 279mm;
+  border: 0.25mm solid var(--inv-line);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------------- 1. Shop header (31 mm) ---------------- */
+.inv-header {
+  flex: 0 0 31mm;
+  text-align: center;
+  color: var(--inv-blue);
+  padding-top: 2.6mm;
+}
+.inv-shop-name {
+  font-size: 17pt;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+}
+.inv-shop-address { font-size: 8.6pt; margin-top: 1.8mm; letter-spacing: 0.01em; }
+.inv-shop-contact { font-size: 8.8pt; margin-top: 1.1mm; }
+.inv-shop-gstin { font-size: 7.4pt; margin-top: 1.7mm; letter-spacing: 0.03em; }
+
+/* ---------------- 2. Party / TAX INVOICE block (38 mm) ---------------- */
+.inv-party {
+  flex: 0 0 38mm;
+  display: flex;
+  border-top: 0.25mm solid var(--inv-line);
+}
+.inv-party-left {
+  flex: 1;
+  padding: 2mm 2.5mm 1.6mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+}
+.inv-party-right {
+  flex: 0 0 57mm;
+  border-left: 0.25mm solid var(--inv-line);
+  display: flex;
+  flex-direction: column;
+}
+.inv-kv { display: grid; grid-template-columns: 24mm 3mm 1fr; row-gap: 1.1mm; font-size: 7.8pt; }
+.inv-kv .k { font-weight: 700; }
+.inv-kv .v { overflow: hidden; word-break: break-word; }
+.inv-kv .v.addr { max-height: 9.2mm; white-space: pre-line; }
+.inv-title {
+  flex: 0 0 15mm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9pt;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-bottom: 0.25mm solid var(--inv-line);
+}
+.inv-meta { padding: 2.2mm 2.5mm; display: grid; grid-template-columns: 20mm 3mm 1fr; row-gap: 2mm; font-size: 7.8pt; }
+.inv-meta .k { font-weight: 700; }
+.inv-meta .rev { grid-column: 1 / -1; font-size: 6.5pt; color: #555; }
+
+/* ---------------- 3. Items table area (126 mm) ---------------- */
+.inv-items-area {
+  flex: 0 0 126mm;
+  position: relative;
+  border-top: 0.25mm solid var(--inv-line);
+}
+.inv-items {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.inv-items th, .inv-items td {
+  border-left: 0.2mm solid var(--inv-line-soft);
+  padding: 0 0.8mm;
+  overflow: hidden;
+  background: transparent;
+}
+.inv-items th:first-child, .inv-items td:first-child { border-left: none; }
+.inv-items thead th {
+  height: 6mm;
+  font-size: 6pt;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+  vertical-align: middle;
+  border-bottom: 0.25mm solid var(--inv-line);
+}
+.inv-items tbody tr.item td {
+  height: 7.5mm;
+  font-size: 7.4pt;
+  vertical-align: top;
+  padding-top: 1mm;
+}
+.inv-items td.c { text-align: center; }
+.inv-items td.n { text-align: right; padding-right: 1mm; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.inv-items td.desc { line-height: 1.2; }
+.inv-items td.desc .metal { display: block; }
+.inv-items td.desc .name { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.inv-items td.huid { font-size: 6.6pt; word-break: break-all; }
+.inv-items tr.filler td { border-left: none; }
+.inv-items tfoot td {
+  height: 5mm;
+  font-size: 7.2pt;
+  font-weight: 700;
+  vertical-align: middle;
+  border-top: 0.25mm solid var(--inv-line-soft);
+}
+
+/* Central watermark sits behind the table */
+.inv-watermark {
+  position: absolute;
+  z-index: 0;
+  left: 0;
+  top: 13mm;
+  width: 194mm;
+  height: 108mm;
+  pointer-events: none;
+}
+.inv-watermark svg { display: block; width: 194mm; height: 108mm; }
+.inv-watermark .wm-serif { font-family: 'Cormorant Garamond', Didot, 'Bodoni 72', 'Bodoni MT', 'Times New Roman', serif; }
+.inv-watermark img {
+  position: absolute;
+  left: 50%;
+  top: 4mm;
+  transform: translateX(-50%);
+  max-width: 120mm;
+  max-height: 88mm;
+  opacity: 0.12;
+}
+
+/* ---------------- 4. Summary: words | bank | totals (29 mm) ---------------- */
+.inv-summary {
+  flex: 0 0 29mm;
+  display: flex;
+  border-top: 0.25mm solid var(--inv-line);
+  font-size: 7.4pt;
+}
+.inv-sum-left { flex: 0 0 67mm; display: flex; flex-direction: column; min-width: 0; }
+.inv-sum-mid { flex: 0 0 64mm; border-left: 0.25mm solid var(--inv-line); min-width: 0; }
+.inv-sum-right { flex: 1; border-left: 0.25mm solid var(--inv-line); padding: 1mm 2mm 0 4mm; min-width: 0; }
+.inv-box-title {
+  font-weight: 700;
+  font-size: 7.4pt;
+  padding: 0.7mm 1.6mm;
+  border-bottom: 0.25mm solid var(--inv-line);
+}
+.inv-sum-left .body { padding: 0.8mm 1.6mm; display: flex; flex-direction: column; gap: 0.7mm; }
+.inv-words { font-size: 7.2pt; line-height: 1.25; max-height: 6.4mm; overflow: hidden; }
+.inv-sum-left .ref { font-size: 7.2pt; }
+.inv-sum-left .ref b { font-weight: 700; }
+.inv-notes {
+  font-size: 8pt;
+  font-style: italic;
+  color: #1c2e6b;
+  max-height: 7mm;
+  overflow: hidden;
+  border-top: 0.2mm solid var(--inv-line-soft);
+  padding-top: 0.6mm;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.inv-bank { display: grid; grid-template-columns: 21.5mm 1.8mm 1fr; row-gap: 1.6mm; padding: 1.6mm 1.4mm; font-size: 6.6pt; }
+.inv-bank > span:not(.v) { white-space: nowrap; }
+.inv-bank .v { font-weight: 700; font-size: 6.1pt; line-height: 1.2; overflow: hidden; max-height: 5.2mm; letter-spacing: -0.02em; word-break: break-word; }
+.inv-totals { width: 100%; border-collapse: collapse; font-size: 8pt; }
+.inv-totals td { padding: 0.35mm 0; font-weight: 700; }
+.inv-totals td.n { text-align: right; font-variant-numeric: tabular-nums; }
+.inv-totals.dense td { padding: 0.1mm 0; line-height: 1.15; }
+.inv-totals.dense tr.gross td { padding-top: 0.6mm; }
+.inv-totals tr.adj td { font-size: 7.6pt; }
+.inv-totals tr.adj small { font-size: 6.2pt; font-weight: 400; }
+.inv-totals tr.gross td { padding-top: 1.2mm; font-size: 8.4pt; }
+.inv-totals tr.gross td.n span { border-top: 0.25mm solid var(--inv-line); padding-top: 0.4mm; }
+
+/* ---------------- 5. Terms | signature (remaining ≈55 mm) ---------------- */
+.inv-bottom { flex: 1; display: flex; border-top: 0.25mm solid var(--inv-line); min-height: 0; }
+.inv-terms { flex: 0 0 90mm; display: flex; flex-direction: column; padding: 1.2mm 1.6mm 1.6mm; min-width: 0; }
+.inv-terms h4 { margin: 0 0 1.2mm; font-size: 8pt; font-weight: 700; text-align: center; color: var(--inv-ink); }
+.inv-terms ol { margin: 0; padding: 0; list-style: none; font-size: 6.3pt; line-height: 1.42; flex: 1; overflow: hidden; }
+.inv-terms .foot { text-align: center; font-size: 7.4pt; font-weight: 700; }
+.inv-sign {
+  flex: 1;
+  border-left: 0.25mm solid var(--inv-line);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 2mm 2mm 1.4mm;
+}
+.inv-sign .for { text-align: center; font-size: 7.6pt; font-weight: 700; }
+.inv-sign .auth { font-size: 6.8pt; }
+
+/* ---------------- stamps ---------------- */
+.inv-stamp {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  top: 128mm;
+  transform: translate(-50%, -50%) rotate(-18deg);
+  border: 1.2mm solid rgba(169, 58, 47, 0.55);
+  color: rgba(169, 58, 47, 0.55);
+  font: 700 24pt Arial, sans-serif;
+  letter-spacing: 0.12em;
+  padding: 2mm 6mm;
+  white-space: nowrap;
+  text-align: center;
+}
+.inv-stamp small { display: block; font-size: 9pt; letter-spacing: 0.04em; }
+
+/* ---------------- on-screen preview wrapper ---------------- */
+.a4-preview { width: 100%; overflow: hidden; }
+.a4-preview .a4-scaler { transform-origin: top left; }
+.a4-preview .inv-page { box-shadow: 0 2px 14px rgba(0, 0, 0, 0.14); }
+
+/* =====================================================================
+   PRINT: only #print-root (the invoice) is printed, on exactly one A4 page.
+   ===================================================================== */
+#print-root { display: none; }
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+  html, body {
+    width: 210mm !important;
+    height: 297mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    overflow: hidden !important;
+  }
+  body > #root { display: none !important; }
+  #print-root { display: block !important; }
+  #print-root .inv-page {
+    /* a hair under 297mm so rounding never spills onto a blank second page */
+    height: 296.8mm;
+    margin: 0;
+    box-shadow: none;
+    page-break-after: avoid;
+    break-after: avoid;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}
