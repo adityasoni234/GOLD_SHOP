@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
-import { Printer, FileDown, Pencil, Copy, Ban, Wallet, Trash2, History, ArrowLeft, Calculator, CheckCircle2 } from 'lucide-react';
+import { Printer, FileDown, Pencil, Copy, Ban, Wallet, Trash2, History, ArrowLeft, Calculator, CheckCircle2, MessageCircle } from 'lucide-react';
+import { openWhatsApp, invoiceMessage, reminderMessage, waPhone } from '../utils/whatsapp.js';
 import { useApp } from '../context/AppContext.jsx';
 import { useToast } from '../components/common/Toast.jsx';
 import PageHeader from '../components/common/PageHeader.jsx';
@@ -76,6 +77,15 @@ export default function InvoiceDetails() {
                 <button className="btn" onClick={() => printInvoice(invoice, { asPdf: true })} title='In the print dialog choose "Save as PDF"'>
                   <FileDown size={15} /> Download PDF
                 </button>
+                {isFinal && (
+                  <button
+                    className="btn btn-whatsapp"
+                    onClick={() => openWhatsApp(invoice.customer.phone, invoiceMessage(invoice))}
+                    title={waPhone(invoice.customer.phone) ? `Send bill summary to ${invoice.customer.phone}` : 'No valid mobile on this invoice – WhatsApp will ask you to pick a contact'}
+                  >
+                    <MessageCircle size={15} /> Send on WhatsApp
+                  </button>
+                )}
                 {isFinal && <button className="btn" onClick={() => setDialog('pay')}><Wallet size={15} /> Record payment</button>}
                 {isFinal && <Link className="btn" to={`/invoices/${invoice.id}/edit`}><Pencil size={15} /> Edit</Link>}
               </>
@@ -91,6 +101,7 @@ export default function InvoiceDetails() {
           <CheckCircle2 size={16} />
           <div className="grow">Invoice {invoice.invoiceNo} saved. Print it on A4 paper with “Background graphics” on and margins set to “None”.</div>
           <button className="btn btn-sm btn-primary" onClick={() => printInvoice(invoice)}><Printer size={13} /> Print now</button>
+          <button className="btn btn-sm btn-whatsapp" onClick={() => openWhatsApp(invoice.customer.phone, invoiceMessage(invoice))}><MessageCircle size={13} /> WhatsApp</button>
         </div>
       )}
       {invoice.status === INVOICE_STATUS.CANCELLED && (
@@ -108,7 +119,17 @@ export default function InvoiceDetails() {
         <div className="stack">
           {!isDraft && (
             <div className="card">
-              <div className="card-header"><h3><Wallet size={16} /> Payments</h3>{isFinal && <button className="btn btn-sm" onClick={() => setDialog('pay')}>Record</button>}</div>
+              <div className="card-header">
+                <h3><Wallet size={16} /> Payments</h3>
+                <div className="row">
+                  {isFinal && invoice.balancePaise > 0 && (
+                    <button className="btn btn-sm btn-whatsapp" title="Send balance reminder on WhatsApp" onClick={() => openWhatsApp(invoice.customer.phone, reminderMessage(invoice))}>
+                      <MessageCircle size={13} /> Reminder
+                    </button>
+                  )}
+                  {isFinal && <button className="btn btn-sm" onClick={() => setDialog('pay')}>Record</button>}
+                </div>
+              </div>
               <div className="card-body">
                 <dl className="kv">
                   <dt>Gross amount</dt><dd className="right num strong">₹{formatINR(t.grossPaise)}</dd>

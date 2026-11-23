@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { FilePlus2, Printer, Eye, Copy, Pencil, Files, Download } from 'lucide-react';
+import { FilePlus2, Printer, Eye, Copy, Pencil, Files, Download, MessageCircle } from 'lucide-react';
+import { openWhatsApp, invoiceMessage } from '../utils/whatsapp.js';
 import { useApp } from '../context/AppContext.jsx';
 import PageHeader from '../components/common/PageHeader.jsx';
 import EmptyState from '../components/common/EmptyState.jsx';
@@ -152,6 +153,11 @@ export default function InvoiceHistory() {
                         <Link className="btn btn-sm btn-icon" title="Print" to={`/invoices/${inv.id}?print=1`}><Printer size={14} /></Link>
                       ) : (
                         <Link className="btn btn-sm btn-icon" title="Edit draft" to={`/invoices/${inv.id}/edit`}><Pencil size={14} /></Link>
+                      )}
+                      {inv.status === INVOICE_STATUS.FINAL && (
+                        <button className="btn btn-sm btn-icon btn-whatsapp" title="Send on WhatsApp" onClick={() => openWhatsApp(inv.customer.phone, invoiceMessage(inv))}>
+                          <MessageCircle size={14} />
+                        </button>
                       )}
                       <Link className="btn btn-sm btn-icon" title="Duplicate as new draft" to={`/invoices/new?from=${inv.id}`}><Copy size={14} /></Link>
                     </td>

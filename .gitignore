@@ -6,3 +6,4 @@ dist
 .DS_Store
 *.log
 print-test-output
+.claude/settings.local.json

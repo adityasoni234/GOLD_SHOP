@@ -405,7 +405,7 @@ export default function CreateInvoice() {
 
           <OldMetalSection
             oldMetal={form.oldMetal || emptyOldMetal()}
-            setOldMetal={(oldMetal) => setForm((f) => ({ ...f, oldMetal }))}
+            setOldMetal={(fn) => setForm((f) => ({ ...f, oldMetal: fn(f.oldMetal || emptyOldMetal()) }))}
             computedLines={computed.oldMetal}
           />
 

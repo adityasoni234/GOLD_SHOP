@@ -7,7 +7,8 @@ import { formatINR, paiseToPlain } from '../../utils/currency.js';
  * Applied after GST: it changes the amount payable, never the taxable value.
  */
 export default function OldMetalSection({ oldMetal, setOldMetal, computedLines }) {
-  const update = (key, patch) => setOldMetal({ ...oldMetal, [key]: { ...oldMetal[key], ...patch } });
+  // functional update so quick successive edits never overwrite each other
+  const update = (key, patch) => setOldMetal((om) => ({ ...om, [key]: { ...om[key], ...patch } }));
 
   return (
     <div className="card">

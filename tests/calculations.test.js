@@ -222,3 +222,11 @@ test('old metal larger than the bill is invalid', () => {
   assert.ok(inv.grossPaise < 0);
   assert.equal(inv.valid, false);
 });
+
+test('WhatsApp phone normalisation', async () => {
+  const { waPhone } = await import('../src/utils/whatsapp.js');
+  assert.equal(waPhone('9876543210'), '919876543210');
+  assert.equal(waPhone('+91 98765-43210'), '919876543210');
+  assert.equal(waPhone('09876543210'), '919876543210');
+  assert.equal(waPhone('12345'), '');
+});

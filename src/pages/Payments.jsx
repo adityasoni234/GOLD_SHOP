@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Wallet, AlertCircle, Download } from 'lucide-react';
+import { Wallet, AlertCircle, Download, MessageCircle } from 'lucide-react';
+import { openWhatsApp, reminderMessage } from '../utils/whatsapp.js';
 import { useApp } from '../context/AppContext.jsx';
 import { useToast } from '../components/common/Toast.jsx';
 import PageHeader from '../components/common/PageHeader.jsx';
@@ -59,7 +60,10 @@ export default function Payments() {
                     <td className="num">₹{formatINR(i.amountPaidPaise || 0)}</td>
                     <td className="num strong">₹{formatINR(i.balancePaise)}</td>
                     <td><PaymentStatusBadge status={i.paymentStatus} /></td>
-                    <td className="actions"><button className="btn btn-sm btn-primary" onClick={() => setPaying(i)}>Record payment</button></td>
+                    <td className="actions">
+                      <button className="btn btn-sm btn-whatsapp" title="Send balance reminder on WhatsApp" onClick={() => openWhatsApp(i.customer.phone, reminderMessage(i))}><MessageCircle size={13} /> Remind</button>
+                      <button className="btn btn-sm btn-primary" onClick={() => setPaying(i)}>Record payment</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
