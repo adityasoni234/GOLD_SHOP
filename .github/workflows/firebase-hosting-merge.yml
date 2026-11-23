@@ -1,0 +1,40 @@
+# Deploys the app to Firebase Hosting (live) on every push to main.
+name: Deploy to Firebase Hosting on merge
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    env:
+      HAS_DEPLOY_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_ABSGOLD_F2984 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+        env:
+          # Firebase web config (Project settings > Your apps > Web app). Stored as repo secrets.
+          # If they are not set, the site builds in demo mode (data saved in each browser only).
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_FIREBASE_REQUIRE_AUTH: 'true'
+      - name: Skip deploy until the Firebase service account secret exists
+        if: env.HAS_DEPLOY_KEY != 'true'
+        run: echo "::notice::FIREBASE_SERVICE_ACCOUNT_ABSGOLD_F2984 secret not set yet - built and tested, not deployed. Run 'firebase init hosting:github' to add it."
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        if: env.HAS_DEPLOY_KEY == 'true'
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_ABSGOLD_F2984 }}
+          channelId: live
+          projectId: absgold-f2984

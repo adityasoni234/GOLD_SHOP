@@ -7,3 +7,5 @@ dist
 *.log
 print-test-output
 .claude/settings.local.json
+.firebase/
+firebase-debug.log
